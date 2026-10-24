@@ -69,4 +69,4 @@ jobs:
           "
 
       - name: Run API tests
-        run: npm test -- --reporters=default --reporters=github-actions
+        run: npm test

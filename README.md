@@ -16,12 +16,12 @@ push / PR to main
 ┌─────────────┐  needs   ┌──────────────────────────────┐
 │  lint job   │ ───────► │  build-and-test job          │
 │  npm ci     │          │  MongoDB service (mongo:8)   │
-│  eslint .   │          │  npm ci → npm test (Jest)    │
+│  eslint .   │          │  npm ci → npm test         │
 └─────────────┘          └──────────────────────────────┘
 ```
 
 - **lint** – runs ESLint on the backend. If it fails, tests do not run.
-- **build-and-test** – starts a MongoDB service container, installs dependencies and runs Jest + Supertest.
+- **build-and-test** – starts a MongoDB service container, installs dependencies and runs Node.js built-in test runner (`node --test`) + Supertest.
 
 ## Tests (`tests/api.test.js`)
 
