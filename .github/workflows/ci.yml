@@ -59,5 +59,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check MongoDB connection
+        run: |
+          node -e "
+          const m = require('mongoose');
+          m.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 15000 })
+            .then(async () => { const i = await m.connection.db.admin().serverInfo(); console.log('::notice::MongoDB connected, server ' + i.version); await m.disconnect(); })
+            .catch((e) => { console.log('::error::MongoDB connection failed: ' + e.message); process.exit(1); });
+          "
+
       - name: Run API tests
         run: npm test -- --reporters=default --reporters=github-actions
