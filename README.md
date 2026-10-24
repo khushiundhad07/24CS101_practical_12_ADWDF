@@ -1,51 +1,47 @@
-# Practical 12 – CI Pipeline with GitHub Actions
+# Practical 12 – CI/CD Pipeline with GitHub Actions
 
-![CI Pipeline](https://github.com/khushiundhad07/24CS101_practical_12_ADWDF/actions/workflows/ci.yml/badge.svg)
+**Student:** Khushi Undhad (24CS101)
+**Subject:** ITUE301 – Advanced Web Development Frameworks
 
-**Student:** Khushi Undhad (24CS101) · **Subject:** ITUE301 Advanced Web Development Frameworks
-
-Task Manager API (Express + MongoDB + JWT) with a Continuous Integration pipeline.
-Every push and pull request to `main` is automatically linted and tested.
+## Aim
+To automate testing of the Task Manager application using a GitHub Actions CI pipeline.
 
 ## Pipeline
+The workflow is in `.github/workflows/ci.yml`. It runs on every push and pull request to `main`.
 
 ```
-push / PR to main
-      │
-      ▼
-┌─────────────┐  needs   ┌──────────────────────────────┐
-│  lint job   │ ───────► │  build-and-test job          │
-│  npm ci     │          │  MongoDB service (mongo:8)   │
-│  eslint .   │          │  npm ci → npm test         │
-└─────────────┘          └──────────────────────────────┘
+push to main
+   ↓
+Job 1: Lint            → install → ESLint
+   ↓ (only if lint passes)
+Job 2: Build and Test  → start MongoDB → install → check DB connection → run tests
+   ↓
+✔ pass  or  ✖ fail
 ```
 
-- **lint** – runs ESLint on the backend. If it fails, tests do not run.
-- **build-and-test** – starts a MongoDB service container, installs dependencies and runs Node.js built-in test runner (`node --test`) + Supertest.
+## Tests
+Tests are in `tests/api.test.js`. They use the Node.js test runner and Supertest.
 
-## Tests (`tests/api.test.js`)
-
-| Endpoint | Check |
-|---|---|
-| `GET /api/health` | 200, status ok |
-| `POST /api/auth/register` | 201, user created |
-| `POST /api/auth/login` | 200 with JWT; 401 on wrong password |
-| `GET /api/tasks` | 401 without token; 200 with the user's tasks |
-| `POST /api/tasks` | 201 with title; 400 without title |
-
-## Project structure changes
-
-- `app.js` – builds and **exports** the Express app (no `listen`), so tests can import it.
-- `server.js` – connects to MongoDB and starts the server.
-- `eslint.config.js` – ESLint flat config.
-- `.github/workflows/ci.yml` – the pipeline.
+- Health check returns 200
+- Register a user
+- Login returns a JWT
+- Wrong password is rejected
+- `GET /api/tasks` without a token returns 401
+- Create a task
+- Create a task without a title returns 400
+- Get the user's tasks
 
 ## Run locally
-
 ```bash
 npm install
 npm run lint
-# needs a local MongoDB
-MONGO_URI=mongodb://127.0.0.1:27017/taskmanager_test JWT_SECRET=test npm test
-npm start          # uses .env (MONGO_URI, JWT_SECRET, PORT)
+npm test        # needs MongoDB running locally
+npm start
+```
+
+Create a `.env` file:
+```
+MONGO_URI=mongodb://127.0.0.1:27017/taskmanager
+JWT_SECRET=your_secret
+PORT=5000
 ```
