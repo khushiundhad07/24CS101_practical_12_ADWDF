@@ -6,67 +6,54 @@ on:
   pull_request:
     branches: [main]
 
+defaults:
+  run:
+    working-directory: server
+
 jobs:
   lint:
-    name: Lint (ESLint)
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 18
           cache: npm
+          cache-dependency-path: server/package-lock.json
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
 
-      - name: Run ESLint
+      - name: Lint
         run: npm run lint
 
   build-and-test:
-    name: Build and Test (Jest)
-    runs-on: ubuntu-latest
+    # Tests only run once the code passes lint.
     needs: lint
+    runs-on: ubuntu-latest
 
+    # The API tests need a real MongoDB; GitHub starts this container next to the job.
     services:
       mongodb:
-        image: mongo:8
+        image: mongo:7
         ports:
           - 27017:27017
-        options: >-
-          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 })'"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
-    env:
-      MONGO_URI: mongodb://127.0.0.1:27017/taskmanager_test
-      JWT_SECRET: ci-test-secret
 
     steps:
-      - name: Check out code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 18
           cache: npm
+          cache-dependency-path: server/package-lock.json
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
 
-      - name: Check MongoDB connection
-        run: |
-          node -e "
-          const m = require('mongoose');
-          m.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 15000 })
-            .then(async () => { const i = await m.connection.db.admin().serverInfo(); console.log('::notice::MongoDB connected, server ' + i.version); await m.disconnect(); })
-            .catch((e) => { console.log('::error::MongoDB connection failed: ' + e.message); process.exit(1); });
-          "
+      - name: Type-check
+        run: npm run typecheck
 
       - name: Run API tests
         run: npm test
+        env:
+          MONGO_URI: mongodb://localhost:27017/awdf_p12_test
