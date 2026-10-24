@@ -15,7 +15,7 @@ push / PR to main
       ▼
 ┌─────────────┐  needs   ┌──────────────────────────────┐
 │  lint job   │ ───────► │  build-and-test job          │
-│  npm ci     │          │  MongoDB service (mongo:7)   │
+│  npm ci     │          │  MongoDB service (mongo:8)   │
 │  eslint .   │          │  npm ci → npm test (Jest)    │
 └─────────────┘          └──────────────────────────────┘
 ```
